@@ -349,7 +349,7 @@ const EditHabit = (): React.ReactElement => {
         <View style={styles.sectionHeader}>
           <Ionicons name="notifications" size={20} color={colors.primary} />
           <Text style={styles.sectionTitle}>通知</Text>
-          <Link href={{ pathname: './addAlarm', params: { habitItemId, habitMission } }} asChild>
+          <Link href={{ pathname: './addAlarm', params: { habitItemId, habitMission, habitMissionDetail } }} asChild>
             <TouchableOpacity style={styles.addAlarmButton}>
               <Ionicons name="add" size={24} color={colors.primary} />
             </TouchableOpacity>
@@ -369,7 +369,7 @@ const EditHabit = (): React.ReactElement => {
             return (
               <Link
                 key={alarmItem.alarmId}
-                href={{ pathname: './editAlarm', params: { habitItemId, habitMission, alarmId: alarmItem.alarmId } }}
+                href={{ pathname: './editAlarm', params: { habitItemId, habitMission, habitMissionDetail, alarmId: alarmItem.alarmId } }}
                 asChild
               >
                 <TouchableOpacity style={styles.alarmItem}>
