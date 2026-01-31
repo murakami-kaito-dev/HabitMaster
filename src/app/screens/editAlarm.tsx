@@ -29,7 +29,14 @@ enum Day { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday }
 
 const DAY_LABELS = ['日', '月', '火', '水', '木', '金', '土']
 
-const weekdayScheduleNotificationAsync = async (hours: number, minutes: number, repeatDayOfWeek: boolean[], habitMission: string): Promise<Array<string | null>> => {
+const getNotificationBody = (habitMissionDetail: string): string => {
+  if (habitMissionDetail && habitMissionDetail.trim().length > 0) {
+    return habitMissionDetail.slice(0, 20)
+  }
+  return '習慣を達成しましょう！'
+}
+
+const weekdayScheduleNotificationAsync = async (hours: number, minutes: number, repeatDayOfWeek: boolean[], habitMission: string, habitMissionDetail: string): Promise<Array<string | null>> => {
   const identifier = new Array<string | null>(7).fill(null)
 
   for (let i = 0; i < 7; i++) {
@@ -37,7 +44,7 @@ const weekdayScheduleNotificationAsync = async (hours: number, minutes: number, 
       identifier[i] = await Notifications.scheduleNotificationAsync({
         content: {
           title: habitMission,
-          body: '習慣を達成しましょう！',
+          body: getNotificationBody(habitMissionDetail),
           sound: true
         },
         trigger: {
@@ -53,7 +60,7 @@ const weekdayScheduleNotificationAsync = async (hours: number, minutes: number, 
   return identifier
 }
 
-const handleSaveAsync = async (alarmTime: AlarmTime, repeatDayOfWeek: boolean[], habitItemId: string, alarmId: string, habitMission: string): Promise<void> => {
+const handleSaveAsync = async (alarmTime: AlarmTime, repeatDayOfWeek: boolean[], habitItemId: string, alarmId: string, habitMission: string, habitMissionDetail: string): Promise<void> => {
   if (auth.currentUser === null) { return }
 
   const refToUsersHabitsAlarms = db.doc(`users/${auth.currentUser.uid}/habits/${habitItemId}/alarms/${alarmId}`)
@@ -73,7 +80,7 @@ const handleSaveAsync = async (alarmTime: AlarmTime, repeatDayOfWeek: boolean[],
     alarmTime,
     repeatDayOfWeek,
     updatedAt: firebase.firestore.Timestamp.fromDate(new Date()),
-    alarmIdentifier: await weekdayScheduleNotificationAsync(alarmTime.hours, alarmTime.minutes, repeatDayOfWeek, habitMission)
+    alarmIdentifier: await weekdayScheduleNotificationAsync(alarmTime.hours, alarmTime.minutes, repeatDayOfWeek, habitMission, habitMissionDetail)
   })
     .then(() => {
       router.back()
@@ -126,6 +133,7 @@ const EditAlarm = (): React.ReactElement => {
   const habitItemId = String(useLocalSearchParams().habitItemId)
   const alarmId = String(useLocalSearchParams().alarmId)
   const habitMission = String(useLocalSearchParams().habitMission)
+  const habitMissionDetail = String(useLocalSearchParams().habitMissionDetail ?? '')
 
   const onMomentumScrollEnd = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
@@ -148,7 +156,7 @@ const EditAlarm = (): React.ReactElement => {
 
   useEffect(() => {
     headerNavigation.setOptions({
-      headerRight: () => { return <Save onSave={() => { handleSaveAsync(alarmTime, repeatDayOfWeek, habitItemId, alarmId, habitMission) }}/> }
+      headerRight: () => { return <Save onSave={() => { handleSaveAsync(alarmTime, repeatDayOfWeek, habitItemId, alarmId, habitMission, habitMissionDetail) }}/> }
     })
   }, [alarmTime, repeatDayOfWeek])
 
