@@ -29,6 +29,13 @@ enum dayOfWeek { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday 
 
 const DAY_LABELS = ['日', '月', '火', '水', '木', '金', '土']
 
+const getNotificationTitle = (habitMission: string): string => {
+  if (habitMission && habitMission.trim().length > 0) {
+    return habitMission
+  }
+  return 'HabitMaster'
+}
+
 const getNotificationBody = (habitMissionDetail: string): string => {
   if (habitMissionDetail && habitMissionDetail.trim().length > 0) {
     return habitMissionDetail.slice(0, 20)
@@ -43,7 +50,7 @@ const weekdayScheduleNotificationAsync = async (hours: number, minutes: number, 
     if (repeatDayOfWeek[i]) {
       identifier[i] = await Notifications.scheduleNotificationAsync({
         content: {
-          title: habitMission,
+          title: getNotificationTitle(habitMission),
           body: getNotificationBody(habitMissionDetail),
           sound: true
         },
