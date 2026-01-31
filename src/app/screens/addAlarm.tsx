@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { LayoutAnimation, Platform, ScrollView, StyleSheet, UIManager, View, useWindowDimensions, Text, TouchableOpacity, Alert } from 'react-native'
-import { TimerPicker } from 'react-native-timer-picker'
+import React, { useEffect, useState } from 'react'
+import { Platform, StyleSheet, UIManager, View, Text, TouchableOpacity, Alert } from 'react-native'
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 import { router, useNavigation, useLocalSearchParams } from 'expo-router'
-import { LinearGradient } from 'expo-linear-gradient'
 import * as Notifications from 'expo-notifications'
 import firebase from 'firebase/compat/app'
 import { Ionicons } from '@expo/vector-icons'
@@ -95,8 +94,7 @@ const handlePressRepeatDayOfWeek = (repeatDayOfWeek: boolean[], dayOfWeek: dayOf
 const AddAlarm = (): React.ReactElement => {
   const [alarmTime, setAlarmTime] = useState({ hours: 0, minutes: 0, seconds: 0 })
   const [repeatDayOfWeek, setRepeatDayOfWeek] = useState<boolean[]>(new Array(7).fill(false))
-  const { width: windowWidth } = useWindowDimensions()
-  const refScrollView = useRef(null)
+  const [selectedDate, setSelectedDate] = useState(new Date(2000, 0, 1, 0, 0, 0))
   const headerNavigation = useNavigation()
   const habitItemId = String(useLocalSearchParams().habitItemId)
   const habitMission = String(useLocalSearchParams().habitMission)
@@ -114,57 +112,28 @@ const AddAlarm = (): React.ReactElement => {
     })
   }, [alarmTime, repeatDayOfWeek])
 
-  const onMomentumScrollEnd = useCallback(
-    () => {
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
-    }, [windowWidth]
-  )
-
-  const renderExample = useMemo(() => {
-    return (
-      <View style={[styles.alarmTimeScrollViewSection, { width: windowWidth }]}>
-        <TimerPicker
-          onDurationChange={
-            (timer) => {
-              setAlarmTime({ hours: timer.hours, minutes: timer.minutes, seconds: 0 })
-            }
-          }
-          hideSeconds={true}
-          padWithNItems={2}
-          hourLabel="時"
-          minuteLabel="分"
-          LinearGradient={LinearGradient}
-          styles={{
-            theme: 'light',
-            backgroundColor: colors.background,
-            pickerItem: {
-              fontSize: 32
-            },
-            pickerLabel: {
-              fontSize: 24,
-              marginTop: 0,
-              color: colors.textSecondary
-            },
-            pickerContainer: {
-              marginRight: 6
-            }
-          }}
-        />
-      </View>
-    )
-  }, [windowWidth, alarmTime])
+  const onTimeChange = (event: DateTimePickerEvent, date?: Date): void => {
+    if (date) {
+      setSelectedDate(date)
+      setAlarmTime({
+        hours: date.getHours(),
+        minutes: date.getMinutes(),
+        seconds: 0
+      })
+    }
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.alarmTimeSection}>
-        <ScrollView
-          ref={refScrollView}
-          horizontal
-          pagingEnabled
-          onMomentumScrollEnd={onMomentumScrollEnd}
-        >
-          {renderExample}
-        </ScrollView>
+        <DateTimePicker
+          value={selectedDate}
+          mode="time"
+          display="spinner"
+          onChange={onTimeChange}
+          style={styles.timePicker}
+          locale="ja-JP"
+        />
       </View>
 
       <View style={styles.card}>
@@ -209,13 +178,12 @@ const styles = StyleSheet.create({
   },
   alarmTimeSection: {
     backgroundColor: colors.background,
-    height: 220
+    paddingVertical: spacing.md,
+    alignItems: 'center'
   },
-  alarmTimeScrollViewSection: {
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%'
+  timePicker: {
+    width: '100%',
+    height: 200
   },
   card: {
     backgroundColor: colors.card,
