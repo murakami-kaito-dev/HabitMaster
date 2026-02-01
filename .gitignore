@@ -42,7 +42,8 @@ eas.json
 # docs
 docs/screenshots/
 docs/private/
-docs/other_images/
+docs/notionImages/
+docs/mockUpStudio/
 
 # git(old)
 .git_old/

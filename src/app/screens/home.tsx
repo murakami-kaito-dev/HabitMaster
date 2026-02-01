@@ -5,6 +5,7 @@ import * as Notifications from 'expo-notifications'
 import { Ionicons } from '@expo/vector-icons'
 import Add from '../../components/add'
 import WeeklyCheckButtons from '../../components/weeklyCheckButtons'
+import Sidebar from '../../components/Sidebar'
 import { db, auth } from '../../utils/config'
 import { type Habit } from '../../types/habit'
 import subtractYearMonthDay from '../../components/SubtractYearMonthDay'
@@ -86,6 +87,17 @@ const Home = (): React.ReactElement => {
 
   useEffect(() => {
     headerNavigation.setOptions({
+      // TODO: Ver4でサイドバー機能を有効化する
+      // headerLeft: () => {
+      //   return (
+      //     <TouchableOpacity
+      //       style={styles.menuButton}
+      //       onPress={() => { setIsSidebarOpen((prev) => !prev) }}
+      //     >
+      //       <Ionicons name="menu" size={28} color={colors.textPrimary} />
+      //     </TouchableOpacity>
+      //   )
+      // },
       headerRight: () => { return <Add onAdd={handleAdd}/> }
     })
   }, [])
@@ -115,62 +127,72 @@ const Home = (): React.ReactElement => {
   }, [])
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent} style={styles.container}>
-      { habitItems.length === 0
-        ? (
-        <View style={styles.emptyState}>
-          <Ionicons name="fitness-outline" size={64} color={colors.textMuted} />
-          <Text style={styles.emptyStateTitle}>習慣を追加しよう</Text>
-          <Text style={styles.emptyStateText}>右上の + ボタンから{'\n'}新しい習慣を追加できます</Text>
-        </View>
-          )
-        : (
-            habitItems.map((habitItem) => {
-              subtractYearMonthDay(habitItem, latestAccess)
-              return (
-            <Link
-              key={habitItem.habitItemId}
-              href={{ pathname: './editHabit', params: { habitItemId: habitItem.habitItemId } }}
-              asChild
-            >
-              <TouchableOpacity style={styles.habitCard}>
-                <View style={styles.habitHeader}>
-                  <View style={styles.habitTitleContainer}>
-                    <View style={styles.habitIndicator} />
-                    <Text style={styles.habitTitle} numberOfLines={1}>
-                      {habitItem.habitMission}
-                    </Text>
+    <View style={styles.wrapper}>
+      <ScrollView contentContainerStyle={styles.scrollContent} style={styles.container}>
+        { habitItems.length === 0
+          ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="fitness-outline" size={64} color={colors.textMuted} />
+            <Text style={styles.emptyStateTitle}>習慣を追加しよう</Text>
+            <Text style={styles.emptyStateText}>右上の + ボタンから{'\n'}新しい習慣を追加できます</Text>
+          </View>
+            )
+          : (
+              habitItems.map((habitItem) => {
+                subtractYearMonthDay(habitItem, latestAccess)
+                return (
+              <Link
+                key={habitItem.habitItemId}
+                href={{ pathname: './editHabit', params: { habitItemId: habitItem.habitItemId } }}
+                asChild
+              >
+                <TouchableOpacity style={styles.habitCard}>
+                  <View style={styles.habitHeader}>
+                    <View style={styles.habitTitleContainer}>
+                      <View style={styles.habitIndicator} />
+                      <Text style={styles.habitTitle} numberOfLines={1}>
+                        {habitItem.habitMission}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => {
+                        handleDelete(habitItem.habitItemId)
+                          .then(() => {})
+                          .catch((error: string) => { console.log(error) })
+                      }}
+                    >
+                      <Ionicons name="trash-outline" size={20} color={colors.textMuted} />
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => {
-                      handleDelete(habitItem.habitItemId)
-                        .then(() => {})
-                        .catch((error: string) => { console.log(error) })
-                    }}
-                  >
-                    <Ionicons name="trash-outline" size={20} color={colors.textMuted} />
-                  </TouchableOpacity>
-                </View>
 
-                <WeeklyCheckButtons
-                  habitItem={habitItem}
-                  habitItemId={habitItem.habitItemId}
-                  achievements={habitItem.achievements}
-                />
-              </TouchableOpacity>
-            </Link>
-              )
-            })
-          )}
-    </ScrollView>
+                  <WeeklyCheckButtons
+                    habitItem={habitItem}
+                    habitItemId={habitItem.habitItemId}
+                    achievements={habitItem.achievements}
+                  />
+                </TouchableOpacity>
+              </Link>
+                )
+              })
+            )}
+      </ScrollView>
+      {/* TODO: Ver4でサイドバー機能を有効化する */}
+      {/* <Sidebar isOpen={isSidebarOpen} onClose={() => { setIsSidebarOpen(false) }} /> */}
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background
+  },
+  menuButton: {
+    paddingHorizontal: spacing.md
   },
   scrollContent: {
     alignItems: 'center',

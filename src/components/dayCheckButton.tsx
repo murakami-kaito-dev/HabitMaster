@@ -149,7 +149,8 @@ const DayCheckButton = (props: Props): React.ReactElement => {
           {DAY_LABELS[dayOfWeek]}
         </Text>
       )}
-      {isInteractive ? (
+      {isInteractive
+        ? (
         <TouchableOpacity
           style={[
             styles.statusButton,
@@ -160,11 +161,12 @@ const DayCheckButton = (props: Props): React.ReactElement => {
         >
           {renderContent()}
         </TouchableOpacity>
-      ) : (
+          )
+        : (
         <View style={[styles.statusButton, styles.noLogStatus]}>
           <View style={styles.emptyDot} />
         </View>
-      )}
+          )}
     </View>
   )
 }
