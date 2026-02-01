@@ -2,7 +2,7 @@
   "expo": {
     "name": "HabitMaster",
     "slug": "HabitMaster",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "scheme": "HabitMaster",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
@@ -18,12 +18,18 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.muran-codes.habitmaster",
-      "buildNumber": "1.0.2"
+      "buildNumber": "1.1.0",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "ja"
+      }
     },
     "android": {
       "package": "com.muran-codes.habitmaster",
       "versionCode": 1,
-      "permissions": [],
+      "permissions": [
+        "com.google.android.gms.permission.AD_ID"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
