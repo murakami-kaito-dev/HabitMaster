@@ -1,13 +1,15 @@
 import React from 'react'
 import { View, Text, StyleSheet, TextInput } from 'react-native'
+import { useTranslation } from 'react-i18next'
 
 const HabitMissionDetail = (): React.ReactElement => {
+  const { t } = useTranslation()
   return (
     <View style={styles.habitMissionDetailSection}>
-      <Text style={styles.habitMissionDetailDescription}>詳細</Text>
+      <Text style={styles.habitMissionDetailDescription}>{t('components.habitMissionDetail.title')}</Text>
       <TextInput
         editable = { true }
-        placeholder = "例)仕事から帰ってきたらすぐに走りに行く！"
+        placeholder = {t('components.habitMissionDetail.placeholder')}
         multiline = { true }
         numberOfLines = { 4 }
         style = {styles.habitMissionDetail}

@@ -5,6 +5,7 @@ import * as Notifications from 'expo-notifications'
 import firebase from 'firebase/compat/app'
 import { Ionicons } from '@expo/vector-icons'
 import { subWeeks, startOfWeek, endOfWeek, format } from 'date-fns'
+import { useTranslation } from 'react-i18next'
 import HabitWeekLog from '../../components/habitWeekLog'
 import Save from '../../components/Save'
 import { db, auth } from '../../utils/config'
@@ -12,37 +13,6 @@ import { type HabitItemAlarm } from '../../types/habit'
 import { colors, spacing, borderRadius, fontSize, shadow } from '../../utils/theme'
 
 const MAX_DETAIL_LENGTH = 70
-
-const handleDeleteAlarm = async (habitItemId: string, alarmId: string): Promise<void> => {
-  if (auth.currentUser === null) { return }
-
-  const refToUsersHabitsAlarms = db.doc(`users/${auth.currentUser.uid}/habits/${habitItemId}/alarms/${alarmId}`)
-  const refToUsersHabitsAlarmsAlarmId = await refToUsersHabitsAlarms.get()
-
-  Alert.alert('削除します', 'よろしいですか？', [
-    {
-      text: 'キャンセル'
-    },
-    {
-      text: '削除する',
-      style: 'destructive',
-      onPress: () => {
-        refToUsersHabitsAlarms.delete()
-          .catch(() => { Alert.alert('削除に失敗しました') })
-
-        refToUsersHabitsAlarmsAlarmId.data()?.alarmIdentifier.forEach((preAlarmIdentifier: null | string) => {
-          if (preAlarmIdentifier === null) {
-            // Do Nothing
-          } else {
-            Notifications.cancelScheduledNotificationAsync(preAlarmIdentifier)
-              .then(() => { console.log('.then実行') })
-              .catch((error) => { console.log('error:', error) })
-          }
-        })
-      }
-    }
-  ])
-}
 
 // Achievement type definition
 type Achievement = {
@@ -54,6 +24,7 @@ type Achievement = {
 }
 
 const EditHabit = (): React.ReactElement => {
+  const { t } = useTranslation()
   const { width } = useWindowDimensions()
   // Calculate cell width to match habitDayLog cells
   const cardPadding = 32
@@ -75,6 +46,37 @@ const EditHabit = (): React.ReactElement => {
   const [calendarOffset, setCalendarOffset] = useState(0)
   const habitItemId = String(useLocalSearchParams().habitItemId)
   const headerNavigation = useNavigation()
+
+  const handleDeleteAlarm = async (alarmId: string): Promise<void> => {
+    if (auth.currentUser === null) { return }
+
+    const refToUsersHabitsAlarms = db.doc(`users/${auth.currentUser.uid}/habits/${habitItemId}/alarms/${alarmId}`)
+    const refToUsersHabitsAlarmsAlarmId = await refToUsersHabitsAlarms.get()
+
+    Alert.alert(t('screens.editHabit.deleteTitle'), t('screens.editHabit.deleteMessage'), [
+      {
+        text: t('common.cancel')
+      },
+      {
+        text: t('common.delete'),
+        style: 'destructive',
+        onPress: () => {
+          refToUsersHabitsAlarms.delete()
+            .catch(() => { Alert.alert(t('screens.editHabit.deleteFailed')) })
+
+          refToUsersHabitsAlarmsAlarmId.data()?.alarmIdentifier.forEach((preAlarmIdentifier: null | string) => {
+            if (preAlarmIdentifier === null) {
+              // Do Nothing
+            } else {
+              Notifications.cancelScheduledNotificationAsync(preAlarmIdentifier)
+                .then(() => { console.log('.then実行') })
+                .catch((error) => { console.log('error:', error) })
+            }
+          })
+        }
+      }
+    ])
+  }
 
   // Helper function to compare achievements arrays
   const achievementsEqual = (a: Achievement[], b: Achievement[]): boolean => {
@@ -141,7 +143,7 @@ const EditHabit = (): React.ReactElement => {
         router.back()
       })
       .catch(() => {
-        Alert.alert('更新に失敗しました')
+        Alert.alert(t('screens.editHabit.updateFailed'))
       })
   }
 
@@ -247,7 +249,7 @@ const EditHabit = (): React.ReactElement => {
       <View style={styles.headerCard}>
         <View style={styles.sectionHeader}>
           <Ionicons name="flag" size={20} color={colors.primary} />
-          <Text style={styles.sectionTitle}>習慣</Text>
+          <Text style={styles.sectionTitle}>{t('screens.editHabit.habitLabel')}</Text>
         </View>
         <View style={styles.habitTitleInputContainer}>
           <TextInput
@@ -255,7 +257,7 @@ const EditHabit = (): React.ReactElement => {
             editable={true}
             value={habitMission}
             maxLength={14}
-            placeholder="習慣名を入力"
+            placeholder={t('screens.editHabit.habitPlaceholder')}
             placeholderTextColor={colors.textMuted}
             onChangeText={(text) => { setHabitMission(text) }}
           />
@@ -267,7 +269,7 @@ const EditHabit = (): React.ReactElement => {
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
           <Ionicons name="calendar" size={20} color={colors.primary} />
-          <Text style={styles.sectionTitle}>達成記録</Text>
+          <Text style={styles.sectionTitle}>{t('screens.editHabit.achievementLabel')}</Text>
         </View>
 
         {/* Calendar Navigation */}
@@ -294,7 +296,7 @@ const EditHabit = (): React.ReactElement => {
 
         {/* Day of week header */}
         <View style={styles.dayOfWeekHeader}>
-          {['日', '月', '火', '水', '木', '金', '土'].map((dayLabel, index) => (
+          {(t('weekdays.short', { returnObjects: true }) as string[]).map((dayLabel, index) => (
             <View key={dayLabel} style={[styles.dayOfWeekLabelContainer, { width: cellWidth }]}>
               <Text
                 style={[
@@ -326,14 +328,14 @@ const EditHabit = (): React.ReactElement => {
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
           <Ionicons name="document-text" size={20} color={colors.primary} />
-          <Text style={styles.sectionTitle}>詳細</Text>
+          <Text style={styles.sectionTitle}>{t('screens.editHabit.detailLabel')}</Text>
           <Text style={styles.charCounter}>
             {habitMissionDetail.length}/{MAX_DETAIL_LENGTH}
           </Text>
         </View>
         <TextInput
           editable={true}
-          placeholder="例）仕事から帰ってきたらすぐに走りに行く"
+          placeholder={t('screens.editHabit.detailPlaceholder')}
           placeholderTextColor={colors.textMuted}
           multiline={true}
           numberOfLines={4}
@@ -348,7 +350,7 @@ const EditHabit = (): React.ReactElement => {
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
           <Ionicons name="notifications" size={20} color={colors.primary} />
-          <Text style={styles.sectionTitle}>通知</Text>
+          <Text style={styles.sectionTitle}>{t('screens.editHabit.notificationLabel')}</Text>
           <Link href={{ pathname: './addAlarm', params: { habitItemId, habitMission, habitMissionDetail } }} asChild>
             <TouchableOpacity style={styles.addAlarmButton}>
               <Ionicons name="add" size={24} color={colors.primary} />
@@ -359,12 +361,13 @@ const EditHabit = (): React.ReactElement => {
         {alarmItems.length === 0 ? (
           <View style={styles.emptyAlarm}>
             <Ionicons name="notifications-off-outline" size={32} color={colors.textMuted} />
-            <Text style={styles.emptyAlarmText}>通知が設定されていません</Text>
+            <Text style={styles.emptyAlarmText}>{t('screens.editHabit.noNotification')}</Text>
           </View>
         ) : (
           alarmItems.map((alarmItem) => {
             const everydayAlarmExists = alarmItem.repeatDayOfWeek.every(day => day)
             const hasAlarms = alarmItem.repeatDayOfWeek.some(day => day)
+            const weekdaysShort = t('weekdays.short', { returnObjects: true }) as string[]
 
             return (
               <Link
@@ -378,25 +381,25 @@ const EditHabit = (): React.ReactElement => {
                       {alarmItem.alarmTime.hours}:{String(alarmItem.alarmTime.minutes).padStart(2, '0')}
                     </Text>
                     {everydayAlarmExists ? (
-                      <Text style={styles.repeatWeek}>毎日</Text>
+                      <Text style={styles.repeatWeek}>{t('screens.editHabit.everyday')}</Text>
                     ) : hasAlarms ? (
                       <Text style={styles.repeatWeek}>
-                        {alarmItem.repeatDayOfWeek[0] && '日 '}
-                        {alarmItem.repeatDayOfWeek[1] && '月 '}
-                        {alarmItem.repeatDayOfWeek[2] && '火 '}
-                        {alarmItem.repeatDayOfWeek[3] && '水 '}
-                        {alarmItem.repeatDayOfWeek[4] && '木 '}
-                        {alarmItem.repeatDayOfWeek[5] && '金 '}
-                        {alarmItem.repeatDayOfWeek[6] && '土'}
+                        {alarmItem.repeatDayOfWeek[0] && `${weekdaysShort[0]} `}
+                        {alarmItem.repeatDayOfWeek[1] && `${weekdaysShort[1]} `}
+                        {alarmItem.repeatDayOfWeek[2] && `${weekdaysShort[2]} `}
+                        {alarmItem.repeatDayOfWeek[3] && `${weekdaysShort[3]} `}
+                        {alarmItem.repeatDayOfWeek[4] && `${weekdaysShort[4]} `}
+                        {alarmItem.repeatDayOfWeek[5] && `${weekdaysShort[5]} `}
+                        {alarmItem.repeatDayOfWeek[6] && weekdaysShort[6]}
                       </Text>
                     ) : (
-                      <Text style={styles.repeatWeekWarning}>曜日を設定してください</Text>
+                      <Text style={styles.repeatWeekWarning}>{t('screens.editHabit.setWeekday')}</Text>
                     )}
                   </View>
                   <TouchableOpacity
                     style={styles.deleteAlarmButton}
                     onPress={() => {
-                      handleDeleteAlarm(habitItemId, alarmItem.alarmId)
+                      handleDeleteAlarm(alarmItem.alarmId)
                         .catch((error) => { console.log(error) })
                     }}
                   >

@@ -3,9 +3,11 @@ import { View, ScrollView, Text, StyleSheet, TouchableOpacity, Alert } from 'rea
 import { router, useNavigation, Link, useFocusEffect } from 'expo-router'
 import * as Notifications from 'expo-notifications'
 import { Ionicons } from '@expo/vector-icons'
+import { useTranslation } from 'react-i18next'
 import Add from '../../components/add'
 import WeeklyCheckButtons from '../../components/weeklyCheckButtons'
 import Sidebar from '../../components/Sidebar'
+import LanguageSwitcher from '../../components/LanguageSwitcher'
 import { db, auth } from '../../utils/config'
 import { type Habit } from '../../types/habit'
 import subtractYearMonthDay from '../../components/SubtractYearMonthDay'
@@ -15,43 +17,44 @@ const handleAdd = (): void => {
   router.push('./addHabit')
 }
 
-const handleDelete = async (habitItemId: string): Promise<void> => {
-  if (auth.currentUser === null) { return }
-
-  const refToUsersHabitsItemId = db.doc(`users/${auth.currentUser.uid}/habits/${habitItemId}`)
-  const refHabitAlarmCollection = refToUsersHabitsItemId.collection('alarms')
-  const refHabitAlarmId = await refHabitAlarmCollection.get()
-
-  Alert.alert('削除します', '一度削除した記録は戻せません\nよろしいですか？', [
-    {
-      text: 'キャンセル'
-    },
-    {
-      text: '削除する',
-      style: 'destructive',
-      onPress: () => {
-        refToUsersHabitsItemId.delete()
-          .catch(() => { Alert.alert('削除に失敗しました') })
-
-        refHabitAlarmId.forEach((doc) => {
-          doc.data().alarmIdentifier.forEach((alarmIdentifier: null | string) => {
-            if (alarmIdentifier === null) {
-              // DO NOTHING
-            } else {
-              Notifications.cancelScheduledNotificationAsync(alarmIdentifier)
-                .then(() => { console.log('.then実行') })
-                .catch((error) => { console.log('error:', error) })
-            }
-          })
-        })
-      }
-    }
-  ])
-}
-
 const Home = (): React.ReactElement => {
+  const { t } = useTranslation()
   const [habitItems, setHabitItems] = useState<Habit[]>([])
   const headerNavigation = useNavigation()
+
+  const handleDelete = async (habitItemId: string): Promise<void> => {
+    if (auth.currentUser === null) { return }
+
+    const refToUsersHabitsItemId = db.doc(`users/${auth.currentUser.uid}/habits/${habitItemId}`)
+    const refHabitAlarmCollection = refToUsersHabitsItemId.collection('alarms')
+    const refHabitAlarmId = await refHabitAlarmCollection.get()
+
+    Alert.alert(t('screens.home.deleteTitle'), t('screens.home.deleteMessage'), [
+      {
+        text: t('common.cancel')
+      },
+      {
+        text: t('common.delete'),
+        style: 'destructive',
+        onPress: () => {
+          refToUsersHabitsItemId.delete()
+            .catch(() => { Alert.alert(t('screens.home.deleteFailed')) })
+
+          refHabitAlarmId.forEach((doc) => {
+            doc.data().alarmIdentifier.forEach((alarmIdentifier: null | string) => {
+              if (alarmIdentifier === null) {
+                // DO NOTHING
+              } else {
+                Notifications.cancelScheduledNotificationAsync(alarmIdentifier)
+                  .then(() => { console.log('.then実行') })
+                  .catch((error) => { console.log('error:', error) })
+              }
+            })
+          })
+        }
+      }
+    ])
+  }
 
   const date: Date = new Date()
   const year: number = date.getFullYear()
@@ -98,9 +101,16 @@ const Home = (): React.ReactElement => {
       //     </TouchableOpacity>
       //   )
       // },
-      headerRight: () => { return <Add onAdd={handleAdd}/> }
+      headerRight: () => {
+        return (
+          <View style={styles.headerRightContainer}>
+            <LanguageSwitcher />
+            <Add onAdd={handleAdd}/>
+          </View>
+        )
+      }
     })
-  }, [])
+  }, [t])
 
   useEffect(() => {
     if (auth.currentUser === null) { return }
@@ -133,8 +143,8 @@ const Home = (): React.ReactElement => {
           ? (
           <View style={styles.emptyState}>
             <Ionicons name="fitness-outline" size={64} color={colors.textMuted} />
-            <Text style={styles.emptyStateTitle}>習慣を追加しよう</Text>
-            <Text style={styles.emptyStateText}>右上の + ボタンから{'\n'}新しい習慣を追加できます</Text>
+            <Text style={styles.emptyStateTitle}>{t('screens.home.emptyStateTitle')}</Text>
+            <Text style={styles.emptyStateText}>{t('screens.home.emptyStateText')}</Text>
           </View>
             )
           : (
@@ -190,6 +200,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background
+  },
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center'
   },
   menuButton: {
     paddingHorizontal: spacing.md
