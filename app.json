@@ -45,7 +45,8 @@
           "root": "./src/app"
         }
       ],
-      "expo-tracking-transparency"
+      "expo-tracking-transparency",
+      "expo-localization"
     ],
     "extra": {
       "eas": {

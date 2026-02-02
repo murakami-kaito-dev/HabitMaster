@@ -1,5 +1,6 @@
 import React from 'react'
 import { Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { colors, spacing, fontSize } from '../utils/theme'
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
 }
 
 const Save = (props: Props): React.ReactElement => {
+  const { t } = useTranslation()
   const { onSave, disabled = false } = props
   return (
     <TouchableOpacity
@@ -15,7 +17,7 @@ const Save = (props: Props): React.ReactElement => {
       onPress={onSave}
       disabled={disabled}
     >
-      <Text style={[styles.saveText, disabled && styles.saveTextDisabled]}>保存</Text>
+      <Text style={[styles.saveText, disabled && styles.saveTextDisabled]}>{t('common.save')}</Text>
     </TouchableOpacity>
   )
 }

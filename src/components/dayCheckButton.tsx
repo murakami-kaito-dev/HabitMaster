@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { db, auth } from '../utils/config'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, fontSize } from '../utils/theme'
@@ -27,10 +28,10 @@ interface Props {
   day?: number
 }
 
-const DAY_LABELS = ['日', '月', '火', '水', '木', '金', '土']
-
 const DayCheckButton = (props: Props): React.ReactElement => {
+  const { t } = useTranslation()
   const { habitItemId, achievementsIndex, achievementLog, achievements, dayOfWeek, isToday, isFuture, year, month, day } = props
+  const dayLabels = t('weekdays.short', { returnObjects: true }) as string[]
 
   // Determine initial state
   const getInitialState = (): AchievementState => {
@@ -146,7 +147,7 @@ const DayCheckButton = (props: Props): React.ReactElement => {
           dayOfWeek === 0 && styles.sundayLabel,
           dayOfWeek === 6 && styles.saturdayLabel
         ]}>
-          {DAY_LABELS[dayOfWeek]}
+          {dayLabels[dayOfWeek]}
         </Text>
       )}
       {isInteractive

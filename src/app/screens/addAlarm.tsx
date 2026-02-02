@@ -5,10 +5,12 @@ import { router, useNavigation, useLocalSearchParams } from 'expo-router'
 import * as Notifications from 'expo-notifications'
 import firebase from 'firebase/compat/app'
 import { Ionicons } from '@expo/vector-icons'
+import { useTranslation } from 'react-i18next'
 import Save from '../../components/Save'
 import { db, auth } from '../../utils/config'
 import type { AlarmTime } from '../../types/habit'
 import { colors, spacing, borderRadius, fontSize, shadow } from '../../utils/theme'
+import i18n from '../../i18n'
 
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental?.(true)
@@ -26,20 +28,18 @@ Notifications.setNotificationHandler({
 
 enum dayOfWeek { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday }
 
-const DAY_LABELS = ['日', '月', '火', '水', '木', '金', '土']
-
 const getNotificationTitle = (habitMission: string): string => {
   if (habitMission && habitMission.trim().length > 0) {
     return habitMission
   }
-  return 'HabitMaster'
+  return i18n.t('notifications.defaultTitle')
 }
 
 const getNotificationBody = (habitMissionDetail: string): string => {
   if (habitMissionDetail && habitMissionDetail.trim().length > 0) {
     return habitMissionDetail.slice(0, 20)
   }
-  return '習慣を達成しましょう！'
+  return i18n.t('notifications.defaultBody')
 }
 
 const weekdayScheduleNotificationAsync = async (hours: number, minutes: number, repeatDayOfWeek: boolean[], habitMission: string, habitMissionDetail: string): Promise<Array<string | null>> => {
@@ -87,7 +87,7 @@ const handleSaveAsync = async (alarmTime: AlarmTime, repeatDayOfWeek: boolean[],
       router.back()
     })
     .catch((error: string) => {
-      Alert.alert('保存できませんでした')
+      Alert.alert(i18n.t('screens.addAlarm.saveFailed'))
       console.log(error)
     })
 }
@@ -99,6 +99,7 @@ const handlePressRepeatDayOfWeek = (repeatDayOfWeek: boolean[], dayOfWeek: dayOf
 }
 
 const AddAlarm = (): React.ReactElement => {
+  const { t } = useTranslation()
   const [alarmTime, setAlarmTime] = useState({ hours: 0, minutes: 0, seconds: 0 })
   const [repeatDayOfWeek, setRepeatDayOfWeek] = useState<boolean[]>(new Array(7).fill(false))
   const [selectedDate, setSelectedDate] = useState(new Date(2000, 0, 1, 0, 0, 0))
@@ -106,6 +107,7 @@ const AddAlarm = (): React.ReactElement => {
   const habitItemId = String(useLocalSearchParams().habitItemId)
   const habitMission = String(useLocalSearchParams().habitMission)
   const habitMissionDetail = String(useLocalSearchParams().habitMissionDetail ?? '')
+  const dayLabels = t('weekdays.short', { returnObjects: true }) as string[]
 
   useEffect(() => {
     requestPermissionsAsync()
@@ -146,11 +148,11 @@ const AddAlarm = (): React.ReactElement => {
       <View style={styles.card}>
         <View style={styles.sectionHeader}>
           <Ionicons name="repeat" size={20} color={colors.primary} />
-          <Text style={styles.sectionTitle}>くり返し</Text>
+          <Text style={styles.sectionTitle}>{t('screens.addAlarm.repeatLabel')}</Text>
         </View>
 
         <View style={styles.repeatDayContainer}>
-          {DAY_LABELS.map((label, index) => (
+          {dayLabels.map((label, index) => (
             <TouchableOpacity
               key={index}
               onPress={() => { handlePressRepeatDayOfWeek(repeatDayOfWeek, index, setRepeatDayOfWeek) }}
