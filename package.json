@@ -28,7 +28,6 @@
     "expo-notifications": "~0.32.16",
     "expo-router": "~6.0.23",
     "expo-status-bar": "~3.0.9",
-    "expo-tracking-transparency": "~6.0.8",
     "firebase": "^10.11.0",
     "i18next": "^25.8.0",
     "react": "19.1.0",
